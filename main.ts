@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import 'list2heading'
 
-import { Editor, MarkdownView, Plugin } from 'obsidian';
+import { App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 import { MdListConverter } from 'list2heading';
 
 // Remember to rename these classes and interfaces!
 
 interface PluginSettings {
-
+	intent: number
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
-
+	intent: 2
 }
 
 export default class List2heading extends Plugin {
@@ -26,10 +26,11 @@ export default class List2heading extends Plugin {
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				const selectedText = editor.getSelection();
 				const converter = await MdListConverter.createConverter(selectedText);
-				const convertedText = await converter.lists2heading();
+				const convertedText = await converter.lists2heading({ intent: ' '.repeat(this.settings.intent) });
 				editor.replaceSelection(convertedText);
 			}
 		})
+		this.addSettingTab(new SampleSettingTab(this.app, this));
 	}
 
 	onunload() {
@@ -60,28 +61,29 @@ export default class List2heading extends Plugin {
 // 	}
 // }
 
-// class SampleSettingTab extends PluginSettingTab {
-// 	plugin: MyPlugin;
+class SampleSettingTab extends PluginSettingTab {
+	plugin: List2heading;
 
-// 	constructor(app: App, plugin: MyPlugin) {
-// 		super(app, plugin);
-// 		this.plugin = plugin;
-// 	}
+	constructor(app: App, plugin: List2heading) {
+		super(app, plugin);
+		this.plugin = plugin;
+	}
 
-// 	display(): void {
-// 		const {containerEl} = this;
+	display(): void {
+		const { containerEl } = this;
 
-// 		containerEl.empty();
+		containerEl.empty();
 
-// 		new Setting(containerEl)
-// 			.setName('Setting #1')
-// 			.setDesc('It\'s a secret')
-// 			.addText(text => text
-// 				.setPlaceholder('Enter your secret')
-// 				.setValue(this.plugin.settings.mySetting)
-// 				.onChange(async (value) => {
-// 					this.plugin.settings.mySetting = value;
-// 					await this.plugin.saveSettings();
-// 				}));
-// 	}
-// }
+		new Setting(containerEl)
+			.setName('intent:')
+			.setDesc('How many spaces to indent the list')
+			.addSlider(slider => slider
+				.setDynamicTooltip()
+				.setLimits(0, 10, 1)
+				.setValue(this.plugin.settings.intent)
+				.onChange(async (value) => {
+					this.plugin.settings.intent = value;
+					await this.plugin.saveSettings();
+				}));
+	}
+}
