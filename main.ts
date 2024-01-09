@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import 'list2heading'
 
-import { App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting, Vault } from 'obsidian';
 
 import { MdListConverter } from 'list2heading';
 
@@ -9,10 +9,12 @@ import { MdListConverter } from 'list2heading';
 
 interface PluginSettings {
 	intent: number
+	useVaultSettings: boolean,
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
-	intent: 2
+	intent: 2,
+	useVaultSettings: true,
 }
 
 export default class List2heading extends Plugin {
@@ -24,9 +26,13 @@ export default class List2heading extends Plugin {
 			id: 'list2heading',
 			name: 'List to Heading',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
+				//获取用户在obsidian的全局设置
+
+
 				const selectedText = editor.getSelection();
 				const converter = await MdListConverter.createConverter(selectedText);
-				const convertedText = await converter.lists2heading({ intent: ' '.repeat(this.settings.intent) });
+				const tabSize = this.settings.useVaultSettings ? (this.app.vault as any).config['tabSize'] : this.settings.intent;
+				const convertedText = await converter.lists2heading({ intent: ' '.repeat(tabSize) });
 				editor.replaceSelection(convertedText);
 			}
 		})
@@ -83,6 +89,15 @@ class SampleSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.intent)
 				.onChange(async (value) => {
 					this.plugin.settings.intent = value;
+					await this.plugin.saveSettings();
+				}));
+		new Setting(containerEl)
+			.setName('use vault settings')
+			.setDesc('use tab size in the vault settings')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.useVaultSettings)
+				.onChange(async (value) => {
+					this.plugin.settings.useVaultSettings = value;
 					await this.plugin.saveSettings();
 				}));
 	}
