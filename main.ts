@@ -9,11 +9,13 @@ import { MdListConverter } from 'list2heading';
 // Remember to rename these classes and interfaces!
 
 interface PluginSettings {
+	ignoreLastLevelList: boolean;
 	intent: number
 	useVaultSettings: boolean,
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
+	ignoreLastLevelList: true,
 	intent: 2,
 	useVaultSettings: true,
 }
@@ -33,7 +35,7 @@ export default class List2heading extends Plugin {
 				const selectedText = editor.getSelection();
 				const converter = await MdListConverter.createConverter(selectedText);
 				const tabSize = this.settings.useVaultSettings ? (this.app.vault as any).config['tabSize'] : this.settings.intent;
-				const convertedText = await converter.lists2heading({ intent: ' '.repeat(tabSize) });
+				const convertedText = await converter.lists2heading(this.settings.ignoreLastLevelList, { intent: ' '.repeat(tabSize) });
 				editor.replaceSelection(convertedText);
 			}
 		})
@@ -101,5 +103,15 @@ class SampleSettingTab extends PluginSettingTab {
 					this.plugin.settings.useVaultSettings = value;
 					await this.plugin.saveSettings();
 				}));
+		new Setting(containerEl)
+			.setName('ignore last level list')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.ignoreLastLevelList)
+				.onChange(async (value) => {
+					this.plugin.settings.ignoreLastLevelList = value;
+					await this.plugin.saveSettings();
+				})
+			)
+
 	}
 }
