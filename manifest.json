@@ -1,7 +1,7 @@
 {
 	"id": "list2heading",
 	"name": "List to Heading",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"minAppVersion": "0.15.0",
 	"description": "Convert list to heading in obsidian MarkDown.",
 	"author": "qql1",
